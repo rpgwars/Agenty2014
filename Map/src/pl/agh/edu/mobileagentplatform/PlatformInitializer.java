@@ -31,7 +31,7 @@ public class PlatformInitializer {
 	private static PlatformInitializer instance = null; 
 
 	private PlatformInitializer(){
-		
+	 	
 	}
 	
 	public static PlatformInitializer getInstance(){
