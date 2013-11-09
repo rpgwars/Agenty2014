@@ -21,6 +21,8 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 
 
+
+//wnioski : trzeba zastosowac amssubscriber do wszystkich , teraz jest stosowany tylko do serwerow!
 public class PlatformInitializer {
 	
 	private Logger logger = Logger.getJADELogger(this.getClass().getName());
@@ -29,6 +31,8 @@ public class PlatformInitializer {
 	private ServiceConnection serviceConnection = null;
 	
 	private static PlatformInitializer instance = null; 
+	private static String identifier = null; 
+	private static int converstationId = 0; 
 
 	private PlatformInitializer(){
 	 	
@@ -146,7 +150,14 @@ public class PlatformInitializer {
 					}
 				});
 	}
-
+	
+	public String getIdentifier(){
+		return identifier; 
+	}
+	
+	public String getAnotherConversationId(){
+		return identifier + "#" + Integer.toString(converstationId++); 
+	}
 
 }
 
