@@ -11,6 +11,7 @@ import jade.util.leap.Properties;
 import jade.wrapper.AgentController;
 import jade.wrapper.ControllerException;
 
+import java.util.Random;
 import java.util.logging.Level;
 
 import android.app.Activity;
@@ -41,6 +42,8 @@ public class PlatformInitializer {
 	public static PlatformInitializer getInstance(){
 		if(instance == null){
 			instance = new PlatformInitializer(); 
+			Random random = new Random(); 
+			identifier = Integer.toString(random.nextInt() + random.nextInt());
 		}
 		return instance; 
 	}
@@ -151,7 +154,7 @@ public class PlatformInitializer {
 				});
 	}
 	
-	public String getIdentifier(){
+	public String getIdentifier(){ 
 		return identifier; 
 	}
 	

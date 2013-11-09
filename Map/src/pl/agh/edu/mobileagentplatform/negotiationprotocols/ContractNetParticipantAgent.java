@@ -62,17 +62,17 @@ public abstract class ContractNetParticipantAgent extends Agent {
 					    new TypeReference<HashMap<String,String>>(){});
 				} catch (Exception e) {
 					logger.log(Level.INFO, "could not parse call for proposal from " + callForProposal.getSender().toString());
-					sendRefuseMessage(callForProposal.getSender());
+					sendRefuseMessage(callForProposal.getSender(), callForProposal.getConversationId());
 					return; 
 				}
 				
 				Map<String,String> proposalContent = createProposal(callForProposal.getSender(), callForProposalContent);
 				if(proposalContent == null){
 					logger.log(Level.INFO, "refused to send propose to " + callForProposal.getSender().toString());
-					sendRefuseMessage(callForProposal.getSender());
+					sendRefuseMessage(callForProposal.getSender(), callForProposal.getConversationId());
 					return; 
 				}
-				ContractNetParticipantConversationState conversationState = new ContractNetParticipantConversationState(callForProposal.getSender(), callForProposalContent);
+				ContractNetParticipantConversationState conversationState = new ContractNetParticipantConversationState(callForProposal.getSender(), proposalContent);
 				conversationIdStateMap.put(callForProposal.getConversationId(), conversationState);
 				addBehaviour(new ProposalSender(getAgent(),callForProposal.getConversationId()));
 
@@ -83,9 +83,10 @@ public abstract class ContractNetParticipantAgent extends Agent {
 			
 		}
 		
-		private void sendRefuseMessage(AID callForProposalSenderAid){
+		private void sendRefuseMessage(AID callForProposalSenderAid, String conversationId){
 			ACLMessage rejectMessage = new ACLMessage(ACLMessage.REFUSE);
 			rejectMessage.addReceiver(callForProposalSenderAid);
+			rejectMessage.setConversationId(conversationId);
 			send(rejectMessage);
 		}
 		

@@ -36,10 +36,12 @@ public class ContractNetInitiatorAgent extends Agent implements ContractNetProto
 	
 	private ObjectMapper objectMapper; 
 	
+	private Timer timer;
+	
 	protected void setup() {
 		super.setup();
 		Object[] args = getArguments();
-		
+		timer = new Timer(); 
 		objectMapper = new ObjectMapper();
 		conversationIdStateMap = new HashMap<String,ContractNetInitiatorConversationState>(); 
 		addBehaviour(new CallForProposalReplyListener(this));
@@ -54,6 +56,7 @@ public class ContractNetInitiatorAgent extends Agent implements ContractNetProto
 		String conversationId = PlatformInitializer.getInstance().getAnotherConversationId();
 		ContractNetInitiatorConversationState conversationState;
 		try {
+				objectMapper.writeValueAsString(message);
 			conversationState = new ContractNetInitiatorConversationState(objectMapper.writeValueAsString(message),
 					participants,conversationId, proposalEvaluator);
 		} catch (Exception e) {
@@ -85,11 +88,11 @@ public class ContractNetInitiatorAgent extends Agent implements ContractNetProto
 			aclMessage.setContent(conversationState.getMessage());
 			send(aclMessage);
 			logger.log(Level.INFO, "ContractNet call for proposal sent with conversation id  " + conversationState.getConversationId());
-			Timer timer = new Timer(); 
 			timer.schedule(new TimerTask() {
 				
 				@Override
 				public void run() {
+					logger.log(Level.INFO, "Entering answering proposal state after timeout " + conversationState.getConversationId());
 					boolean settingStatusSucceded = conversationState.setStatus(ContractNetInitiatorConversationStatus.ANSWERING_PROPOSALS_STATUS);
 					if(settingStatusSucceded)
 						CallForProposalSender.this.getAgent().addBehaviour(new ProposalAnswerSender(getAgent(), conversationState));
@@ -121,7 +124,7 @@ public class ContractNetInitiatorAgent extends Agent implements ContractNetProto
 				String conversationId = proposalMessage.getConversationId(); 
 				ContractNetInitiatorConversationState conversationState = conversationIdStateMap.get(conversationId);
 				if(conversationState == null){
-					logger.log(Level.INFO, "Rejected call for proposal answer because of wrong " +
+					logger.log(Level.INFO, "Rejected proposal because of wrong " +
 							"conversation id " + conversationId + " ))");
 				}
 				else{
@@ -147,6 +150,7 @@ public class ContractNetInitiatorAgent extends Agent implements ContractNetProto
 						}
 						
 						boolean continueAcceptingProposals = conversationState.addProposal(proposalMessage.getSender(), proposalContent);
+						logger.log(Level.INFO, "proposal accepted, continue accepting proposals =  " + continueAcceptingProposals);
 						if(!continueAcceptingProposals){
 							boolean settingStatusSucceded = conversationState.setStatus(ContractNetInitiatorConversationStatus.ANSWERING_PROPOSALS_STATUS);
 							if(settingStatusSucceded)

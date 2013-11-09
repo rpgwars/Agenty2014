@@ -61,7 +61,7 @@ public class ContractNetInitiatorConversationState {
 	}
 
 	public synchronized boolean setStatus(ContractNetInitiatorConversationStatus conversationStatus) {
-		if(conversationStatus.isBefore(conversationStatus)){
+		if(this.conversationStatus.isBefore(conversationStatus)){
 			this.conversationStatus = conversationStatus;
 			return true; 
 		}
