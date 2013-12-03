@@ -36,10 +36,6 @@ public class NegotiationServer extends ContractNetParticipantAgent{
 		super.setup();
 		
 		ACLMessage subscription = new ACLMessage(ACLMessage.SUBSCRIBE);
-		Codec codec = new SLCodec();
-		Ontology onto = BasicOntology.getInstance();
-		subscription.setLanguage(codec.getName());
-		subscription.setOntology(onto.getName());
 		String convId = "C-" + getLocalName();
 		subscription.setConversationId(convId);
 		subscription.addReceiver(new AID(manager, AID.ISLOCALNAME));

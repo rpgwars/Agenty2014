@@ -1,14 +1,27 @@
-package pl.agh.edu.negotiationmanager;
+package pl.agh.edu.mobileagentplatform.manager;
 
-import pl.agh.edu.mobileagentplatform.manager.ParticipantsManager;
+/*****************************************************************
+JADE - Java Agent DEvelopment Framework is a framework to develop 
+multi-agent systems in compliance with the FIPA specifications.
+Copyright (C) 2000 CSELT S.p.A. 
 
-public class Manager extends ParticipantsManager{
+GNU Lesser General Public License
 
-}
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation, 
+version 2.1 of the License. 
 
-/*
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
 
-
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the
+Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+Boston, MA  02111-1307, USA.
+ *****************************************************************/
 
 import jade.core.AID;
 import jade.core.Agent;
@@ -25,23 +38,31 @@ import jade.lang.acl.MessageTemplate;
 import jade.proto.SubscriptionResponder;
 import jade.proto.SubscriptionResponder.Subscription;
 import jade.proto.SubscriptionResponder.SubscriptionManager;
-import jade.util.ExtendedProperties;
 import jade.util.Logger;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
-import javax.naming.PartialResultException;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 
 
-
-public class Manager extends ParticipantsManager {
-	private Map<AID, Subscription> participants = new HashMap<AID, Subscription>();
+/**
+   This agent maintains knowledge of agents currently attending the 
+   chat and inform them when someone joins/leaves the chat.
+   @author Giovanni Caire - TILAB
+ */
+public class ParticipantsManager extends Agent implements SubscriptionManager {
+	protected Map<AID, Subscription> participants = new HashMap<AID, Subscription>();
+	protected ObjectMapper objectMapper;
 	private AMSSubscriber subscriber;
 	private Logger logger = jade.util.Logger.getMyLogger(this.getClass().getName());
-	
 	
 	protected void setup() {
 		
@@ -76,13 +97,15 @@ public class Manager extends ParticipantsManager {
 		};
 		addBehaviour(subscriber);
 		addBehaviour(new ParticipantsRequestListener(this));
-		
+		objectMapper = new ObjectMapper(); 
 		logger.log(Level.INFO, "manager created");
 	}
 
 
-
-	@Override
+	///////////////////////////////////////////////
+	// SubscriptionManager interface implementation
+	///////////////////////////////////////////////
+	
 	public boolean register(Subscription subscription) throws RefuseException, NotUnderstoodException { 
 	
 			
@@ -120,15 +143,18 @@ public class Manager extends ParticipantsManager {
 			if(request != null){
 				logger.log(Level.INFO, "received request for serwers ");
 				ACLMessage response = new ACLMessage(ACLMessage.INFORM_REF);
-				response.addReceiver(request.getSender());
-				StringBuffer stringBuffer = new StringBuffer(); 
-				for(AID aid : participants.keySet()){
-					stringBuffer.append(aid.getLocalName());
-					stringBuffer.append(";");
+				response.addReceiver(request.getSender()); 
+				List<String> addresses = new ArrayList<String>(participants.size());
+				for(AID aid : participants.keySet())
+					addresses.add(aid.getLocalName());
+				try {
+					response.setContent(objectMapper.writeValueAsString(addresses));
+					logger.log(Level.INFO, "server participants information sent (" + participants.size() + ")");
+				} catch (Exception e) {
+					response.setContent(null);
+					logger.log(Level.SEVERE, "server could send participants information");
 				}
-				response.setContent(stringBuffer.toString());
 				send(response);
-				logger.log(Level.INFO, "server request response sent " + stringBuffer.toString() + " to " + request.getSender().toString());
 			}
 			else{
 				block();
@@ -139,4 +165,3 @@ public class Manager extends ParticipantsManager {
 	}
 	
 }
-*/

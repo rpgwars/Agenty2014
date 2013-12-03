@@ -1,13 +1,21 @@
 package pl.agh.edu.negotiationclient;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
+
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 
 import pl.agh.edu.mobileagentplatform.negotiationprotocols.ContractNetInitiatorAgent;
 import pl.agh.edu.mobileagentplatform.negotiationprotocols.ContractNetInitiatorConversationState;
@@ -79,7 +87,7 @@ public class NegotiationClientAgent extends ContractNetInitiatorAgent implements
 
 	}
 	
-	private List<AID> serverAgentList; 
+	
 	
 	private class ManagerResponseListener extends CyclicBehaviour{
 		
@@ -90,16 +98,18 @@ public class NegotiationClientAgent extends ContractNetInitiatorAgent implements
 		
 		@Override
 		public void action() {
-			
+			ObjectMapper objectMapper = new ObjectMapper(); 
 			MessageTemplate informRefTemplate = MessageTemplate.MatchPerformative(ACLMessage.INFORM_REF);
 			
 			ACLMessage informRef = receive(informRefTemplate);
 			if(informRef != null){
-				String[] aids = informRef.getContent().split(";");
-				serverAgentList = new ArrayList<AID>(aids.length);
-				for(String aid : aids){
-					serverAgentList.add(new AID(aid, AID.ISLOCALNAME));
-					logger.log(Level.INFO, "received aid " + aid);
+				
+				List<String> addresses = new ArrayList<String>();
+				try {
+					addresses = objectMapper.readValue(informRef.getContent(), 
+						    new TypeReference<List<String>>(){});
+				} catch (Exception e) {
+					logger.log(Level.SEVERE, "couldnt parse participants aids");
 				}
 				Map<String,String> message = new HashMap<String,String>(); 
 				message.put("longtitude", "7");
@@ -130,7 +140,9 @@ public class NegotiationClientAgent extends ContractNetInitiatorAgent implements
 							return retList;
 					}
 				};
-				
+				List<AID> serverAgentList = new ArrayList<AID>(addresses.size()); 
+				for(String address : addresses)
+					serverAgentList.add(new AID(address,AID.ISLOCALNAME));
 				ContractNetInitiatorConversationState conversationState = startConversation(message, serverAgentList, evaluator);
 				new ContractNetResultsReceiver().execute(conversationState);
 				
