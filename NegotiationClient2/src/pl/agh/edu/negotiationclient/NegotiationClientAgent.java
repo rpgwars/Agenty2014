@@ -48,7 +48,7 @@ public class NegotiationClientAgent extends ContractNetInitiatorAgent implements
 
 	private Logger logger = Logger.getJADELogger(this.getClass().getName());
 	
-    private static final String mainAgentId = "manager";	
+    //private static final String mainAgentId = "manager";	
 	private Context context;
 
 	
@@ -63,7 +63,6 @@ public class NegotiationClientAgent extends ContractNetInitiatorAgent implements
 		}	
 		
 		registerO2AInterface(NegotiationClientInterface.class, this);
-		addBehaviour(new ManagerResponseListener(this));
 	}
 	
 	
@@ -77,83 +76,39 @@ public class NegotiationClientAgent extends ContractNetInitiatorAgent implements
 	
 
 	public void getBestPrice() {
-		
-		ACLMessage simpleMessage = new ACLMessage(ACLMessage.REQUEST);		
-		AID receiverAid = new AID(mainAgentId,AID.ISLOCALNAME);
-		simpleMessage.addReceiver(receiverAid);
-		send(simpleMessage);
-		
-		logger.log(Level.INFO, "servers request sent");
-
-	}
 	
-	
-	
-	private class ManagerResponseListener extends CyclicBehaviour{
-		
-		public ManagerResponseListener(Agent agent){
-			super(agent);
-
-		}
-		
-		@Override
-		public void action() {
-			ObjectMapper objectMapper = new ObjectMapper(); 
-			MessageTemplate informRefTemplate = MessageTemplate.MatchPerformative(ACLMessage.INFORM_REF);
+		Map<String,String> message = new HashMap<String,String>(); 
+		message.put("longtitude", "7");
+		message.put("latitude", "8");
+		ContractNetProposalEvaluator evaluator = new ContractNetProposalEvaluator() {
 			
-			ACLMessage informRef = receive(informRefTemplate);
-			if(informRef != null){
-				
-				List<String> addresses = new ArrayList<String>();
-				try {
-					addresses = objectMapper.readValue(informRef.getContent(), 
-						    new TypeReference<List<String>>(){});
-				} catch (Exception e) {
-					logger.log(Level.SEVERE, "couldnt parse participants aids");
-				}
-				Map<String,String> message = new HashMap<String,String>(); 
-				message.put("longtitude", "7");
-				message.put("latitude", "8");
-				ContractNetProposalEvaluator evaluator = new ContractNetProposalEvaluator() {
-					
-					@Override
-					public int evaluate(Map<String, String> proposalContent) {
-						return 1;
-					}
-					
-					@Override
-					public List<Integer> finalEvaluation(
-							List<Map<String, String>> proposalsContent,
-							List<Integer> proposalEvaluation) {
-							
-							double minPrice = Double.MAX_VALUE;
-							int position = -1; 
-							for(int i = 0; i<proposalsContent.size(); i++){
-								double price = Double.parseDouble(proposalsContent.get(i).get("price"));
-								if(minPrice > price){
-									minPrice = price; 
-									position = i; 
-								}
-							}
-							List<Integer> retList = new ArrayList<Integer>(1); 
-							retList.add(position);
-							return retList;
-					}
-				};
-				List<AID> serverAgentList = new ArrayList<AID>(addresses.size()); 
-				for(String address : addresses)
-					serverAgentList.add(new AID(address,AID.ISLOCALNAME));
-				ContractNetInitiatorConversationState conversationState = startConversation(message, serverAgentList, evaluator);
-				new ContractNetResultsReceiver().execute(conversationState);
-				
+			@Override
+			public int evaluate(Map<String, String> proposalContent) {
+				return 1;
 			}
 			
-			else{
-				block(); 
+			@Override
+			public List<Integer> finalEvaluation(
+					List<Map<String, String>> proposalsContent,
+					List<Integer> proposalEvaluation) {
+					
+					double minPrice = Double.MAX_VALUE;
+					int position = -1; 
+					for(int i = 0; i<proposalsContent.size(); i++){
+						double price = Double.parseDouble(proposalsContent.get(i).get("price"));
+						if(minPrice > price){
+							minPrice = price; 
+							position = i; 
+						}
+					}
+					List<Integer> retList = new ArrayList<Integer>(1); 
+					retList.add(position);
+					return retList;
 			}
-			
-		}
-		
+		};
+		ContractNetInitiatorConversationState conversationState = startConversation(message, evaluator);
+		new ContractNetResultsReceiver().execute(conversationState);
+
 	}
 	
     private class ContractNetResultsReceiver extends AsyncTask<ContractNetInitiatorConversationState, Void, String> {

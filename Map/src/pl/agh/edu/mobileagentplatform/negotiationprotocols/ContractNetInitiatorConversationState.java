@@ -21,11 +21,9 @@ public class ContractNetInitiatorConversationState {
 	private Map<AID,Map<String,String>> acceptedProposals;
 	private Map<AID,Map<String,String>> acceptedProposalsResults;
 	
-	public ContractNetInitiatorConversationState(String message, List<AID> callForProposalReceiversList, String conversationId, 
-			ContractNetProposalEvaluator proposalEvaluator) {
+	public ContractNetInitiatorConversationState(String message, String conversationId, ContractNetProposalEvaluator proposalEvaluator) {
 		this.message = message;
-		this.callForProposalReceiversList = callForProposalReceiversList; 
-		this.conversationStatus = ContractNetInitiatorConversationStatus.SENDING_CALLS_FOR_PROPOSAL_STATUS;
+		this.conversationStatus = ContractNetInitiatorConversationStatus.GETTING_PARTICIPANTS_STATUS;
 		this.conversationId = conversationId;
 		this.proposalsContentMap = new HashMap<AID,Map<String,String>>();
 		this.proposalsValueMap = new HashMap<AID,Integer>();

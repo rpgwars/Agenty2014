@@ -143,6 +143,7 @@ public class ParticipantsManager extends Agent implements SubscriptionManager {
 			if(request != null){
 				logger.log(Level.INFO, "received request for serwers ");
 				ACLMessage response = new ACLMessage(ACLMessage.INFORM_REF);
+				response.setConversationId(request.getConversationId());
 				response.addReceiver(request.getSender()); 
 				List<String> addresses = new ArrayList<String>(participants.size());
 				for(AID aid : participants.keySet())

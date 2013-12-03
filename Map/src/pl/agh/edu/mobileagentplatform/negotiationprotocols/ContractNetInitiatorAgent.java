@@ -26,9 +26,12 @@ import pl.agh.edu.mobileagentplatform.PlatformInitializer;
 
 
 
+
 public class ContractNetInitiatorAgent extends Agent implements ContractNetProtocol{
 	
 	private static final long serialVersionUID = -4320801954635002915L;
+	
+	private static final String mainAgentId = "manager";
 	
 	private Logger logger = Logger.getJADELogger(this.getClass().getName());
 	
@@ -46,26 +49,76 @@ public class ContractNetInitiatorAgent extends Agent implements ContractNetProto
 		conversationIdStateMap = new HashMap<String,ContractNetInitiatorConversationState>(); 
 		addBehaviour(new CallForProposalReplyListener(this));
 		addBehaviour(new InformListener(this));
+		addBehaviour(new ManagerResponseListener(this));
 		registerO2AInterface(ContractNetInitiatorAgent.class, this);
 	}
 
 	
-	public ContractNetInitiatorConversationState startConversation(Map<String,String> message, List<AID> participants,
-			ContractNetProposalEvaluator proposalEvaluator) {
+	public ContractNetInitiatorConversationState startConversation(Map<String,String> message, ContractNetProposalEvaluator proposalEvaluator) {
 		
 		String conversationId = PlatformInitializer.getInstance().getAnotherConversationId();
+		
+
+		
 		ContractNetInitiatorConversationState conversationState;
 		try {
-				objectMapper.writeValueAsString(message);
-			conversationState = new ContractNetInitiatorConversationState(objectMapper.writeValueAsString(message),
-					participants,conversationId, proposalEvaluator);
+			objectMapper.writeValueAsString(message);
+			conversationState = new ContractNetInitiatorConversationState(objectMapper.writeValueAsString(message), conversationId, proposalEvaluator);
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, "Could not convert message to json string - conversation aborted");
 			return null; 
 		}
 		conversationIdStateMap.put(conversationId, conversationState);
-		addBehaviour(new CallForProposalSender(this,conversationState));
+		ACLMessage participantsRequest = new ACLMessage(ACLMessage.REQUEST);		
+		AID manager = new AID(mainAgentId,AID.ISLOCALNAME);
+		participantsRequest.addReceiver(manager);
+		participantsRequest.setConversationId(conversationId);
+		send(participantsRequest);
+		logger.log(Level.INFO, "participants request sent");
 		return conversationState;
+	}
+	
+	private class ManagerResponseListener extends CyclicBehaviour{
+		
+
+		private static final long serialVersionUID = 8848174081556922211L;
+
+		public ManagerResponseListener(Agent agent){
+			super(agent);
+
+		}
+		
+		@Override
+		public void action() {
+			 
+			MessageTemplate informRefTemplate = MessageTemplate.MatchPerformative(ACLMessage.INFORM_REF);
+			ACLMessage informRef = receive(informRefTemplate);
+			
+			if(informRef != null){
+				ContractNetInitiatorConversationState conversationState = conversationIdStateMap.get(informRef.getConversationId());
+
+				List<String> addressesList = new ArrayList<String>();
+				try {
+					addressesList = objectMapper.readValue(informRef.getContent(), 
+						    new TypeReference<List<String>>(){});
+				} catch (Exception e) {
+					logger.log(Level.SEVERE, "couldnt parse participants aids");
+				}
+			
+				List<AID> participantsList = new ArrayList<AID>(addressesList.size()); 
+				for(String address : addressesList)
+					participantsList.add(new AID(address,AID.ISLOCALNAME));
+				conversationState.setCallForProposalReceiversList(participantsList);
+				logger.log(Level.SEVERE, "setting conversation participants");
+				conversationState.setStatus(ContractNetInitiatorConversationStatus.SENDING_CALLS_FOR_PROPOSAL_STATUS);
+				addBehaviour(new CallForProposalSender(ManagerResponseListener.this.getAgent(),conversationState));
+			}	
+			else{
+				block(); 
+			}
+			
+		}
+		
 	}
 	
 	private class CallForProposalSender extends OneShotBehaviour{
