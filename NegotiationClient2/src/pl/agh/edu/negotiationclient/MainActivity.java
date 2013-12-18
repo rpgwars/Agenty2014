@@ -31,6 +31,7 @@ import jade.wrapper.AgentController;
 import jade.wrapper.ControllerException;
 import jade.wrapper.StaleProxyException;
 
+import java.util.Map;
 import java.util.logging.Level;
 
 import pl.agh.edu.mobileagentplatform.PlatformInitializer;
@@ -70,6 +71,7 @@ public class MainActivity extends Activity{
 	private String nickname;
 	
 	private NegotiationClientInterface negotiationClientInterface; 
+	private NegotiationServerInterface negotiationServerInterface; 
 	private PlatformInitializer platformInitializer; 
 	
 	private class MyReceiver extends BroadcastReceiver {
@@ -130,10 +132,10 @@ public class MainActivity extends Activity{
 		public void onClick(View view){
 			
 			try {
-				
-				negotiationClientInterface = MicroRuntime.getAgent(nickname).getO2AInterface(NegotiationClientInterface.class);
+				Map<String, String> agentClassNameNickNameMap = PlatformInitializer.getInstance().getAgentClassNameNickNameMap();
+				negotiationClientInterface = MicroRuntime.getAgent(agentClassNameNickNameMap.get(NegotiationClientAgent.class.getName())).getO2AInterface(NegotiationClientInterface.class);
+				negotiationServerInterface = MicroRuntime.getAgent(agentClassNameNickNameMap.get(NegotiationParticipantAgent.class.getName())).getO2AInterface(NegotiationServerInterface.class);
 				negotiationClientInterface.getBestPrice();
-				
 			} catch (StaleProxyException e) {
 				logger.log(Level.SEVERE, "could not get best price: stale proxy exception");
 			} catch (ControllerException e) {
@@ -153,8 +155,10 @@ public class MainActivity extends Activity{
 
 		@Override
 		public void onSuccess(Void arg) {
-			platformInitializer.startAgent(nickname, NegotiationClientAgent.class.getName(),
-					agentStartupCallback, new Object[] { getApplicationContext(), nickname});
+			platformInitializer.startAgent(NegotiationClientAgent.class.getName(),
+					agentStartupCallback, new Object[] { getApplicationContext()});
+			platformInitializer.startAgent(NegotiationParticipantAgent.class.getName(), agentStartupCallback, 
+					new Object[]{getApplicationContext(),"7","8","2","30"});
 		}
 		
 	};
@@ -162,7 +166,7 @@ public class MainActivity extends Activity{
 	private RuntimeCallback<AgentController> agentStartupCallback = new RuntimeCallback<AgentController>() {
 		@Override
 		public void onSuccess(AgentController agent) {
-			logger.log(Level.INFO, "Agent successfully started!");
+			logger.log(Level.INFO, "Agent " + agent.getClass().getName() + "  successfully started!");
 		}
 
 		@Override
@@ -186,7 +190,7 @@ public class MainActivity extends Activity{
 							+ " " + host + ":" + port + "...");
 					
 					nickname = ((EditText)findViewById(R.id.edit_nickname)).getText().toString();
-					platformInitializer.init(host, port, MainActivity.this, platformInitCallback);
+					platformInitializer.init(nickname, host, port, MainActivity.this, platformInitCallback);
 
 					
 				} catch (Exception ex) {

@@ -31,7 +31,9 @@ public abstract class ContractNetParticipantAgent extends Agent {
 		addBehaviour(new ProposalAnswerListener(this));
 	}
 	
-	protected abstract Map<String,String> createProposal(AID sender, Map<String,String> callForProposalContent);
+	protected Map<String,String> createProposal(AID sender, Map<String,String> callForProposalContent){
+		return null; 
+	}
 	protected abstract Map<String,String> createConversationResult(AID sender, Map<String,String> proposal);
 	
 	

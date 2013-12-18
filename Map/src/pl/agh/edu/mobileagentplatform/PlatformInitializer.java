@@ -11,6 +11,8 @@ import jade.util.leap.Properties;
 import jade.wrapper.AgentController;
 import jade.wrapper.ControllerException;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 
@@ -32,23 +34,23 @@ public class PlatformInitializer {
 	private ServiceConnection serviceConnection = null;
 	
 	private static PlatformInitializer instance = null; 
-	private static String identifier = null; 
+	private static String nickname = null; 
 	private static int converstationId = 0; 
 
+	private Map<String,String> agentClassNameNickNameMap = null;
 	private PlatformInitializer(){
-	 	
+	 	agentClassNameNickNameMap = new HashMap<String,String>();
 	}
 	
 	public static PlatformInitializer getInstance(){
 		if(instance == null){
 			instance = new PlatformInitializer(); 
-			Random random = new Random(); 
-			identifier = Integer.toString(random.nextInt() + random.nextInt());
 		}
 		return instance; 
 	}
 	
-	public void init(String host, String port, Activity activity, RuntimeCallback<Void> initCallback){
+	public void init(String nickname, String host, String port, Activity activity, RuntimeCallback<Void> initCallback){
+		PlatformInitializer.nickname = nickname; 
 		initMicroRutime(host, port, activity, initCallback);
 	}
 	
@@ -130,9 +132,17 @@ public class PlatformInitializer {
 		} 
 	}
 
-	public void startAgent(final String nickname, final String className, 
+	private static int nrOfAgent = 0; 
+	
+	public void startAgent(final String className, 
 			final RuntimeCallback<AgentController> agentStartupCallback, Object[] parameters) {
-		microRuntimeServiceBinder.startAgent(nickname,
+		final String newAgentNickname;
+		synchronized(this){
+		newAgentNickname = nickname + nrOfAgent;
+			nrOfAgent++; 
+		}
+		agentClassNameNickNameMap.put(className, newAgentNickname);
+		microRuntimeServiceBinder.startAgent(newAgentNickname,
 				className, parameters,
 				new RuntimeCallback<Void>() {
 					@Override
@@ -140,7 +150,7 @@ public class PlatformInitializer {
 						logger.log(Level.INFO, "Successfully start of the " + className);
 						try {
 							agentStartupCallback.onSuccess(MicroRuntime
-									.getAgent(nickname));
+									.getAgent(newAgentNickname));
 						} catch (ControllerException e) {
 							agentStartupCallback.onFailure(e);
 						}
@@ -152,14 +162,18 @@ public class PlatformInitializer {
 						agentStartupCallback.onFailure(throwable);
 					}
 				});
+		
 	}
 	
-	public String getIdentifier(){ 
-		return identifier; 
-	}
 	
-	public String getAnotherConversationId(){
-		return identifier + "#" + Integer.toString(converstationId++); 
+	
+	public Map<String, String> getAgentClassNameNickNameMap() {
+		return agentClassNameNickNameMap;
+	}
+
+
+	public synchronized String getAnotherConversationId(){
+		return nickname + "#" + Integer.toString(converstationId++); 
 	}
 
 }
