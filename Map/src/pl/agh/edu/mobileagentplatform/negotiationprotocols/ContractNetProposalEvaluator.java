@@ -12,7 +12,11 @@ public abstract class ContractNetProposalEvaluator {
 	
 	private Parameters parameters = new Parameters(5000);
 	
-	public void setParameters(Parameters parameters){
+	public void setParameters(int maxAccepted, int minAccepted, boolean waitTillTimeExceeds, long proposalReceiveDuration){
+		Parameters parameters = new Parameters(proposalReceiveDuration);
+		parameters.setMaxAccepted(maxAccepted);
+		parameters.setMinAccepted(minAccepted);
+		parameters.setWaitTillTimeExceeds(waitTillTimeExceeds);
 		this.parameters = parameters; 
 	}
 	

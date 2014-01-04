@@ -158,7 +158,7 @@ public class MainActivity extends Activity{
 			platformInitializer.startAgent(NegotiationClientAgent.class.getName(),
 					agentStartupCallback, new Object[] { getApplicationContext()});
 			platformInitializer.startAgent(NegotiationParticipantAgent.class.getName(), agentStartupCallback, 
-					new Object[]{getApplicationContext(),"7","8","2","30"});
+					new Object[]{getApplicationContext(),"100","50","20","30"});
 		}
 		
 	};

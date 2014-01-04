@@ -35,6 +35,7 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.ConversationList;
 import jade.lang.acl.MessageTemplate;
@@ -84,28 +85,25 @@ public class NegotiationClientAgent extends ContractNetInitiatorAgent implements
 			
 			@Override
 			public int evaluate(Map<String, String> proposalContent) {
-				return 1;
+				return Integer.MAX_VALUE - (int)Double.parseDouble(proposalContent.get("price"))*100;
 			}
 			
 			@Override
 			public List<Integer> finalEvaluation(
 					List<Map<String, String>> proposalsContent,
 					List<Integer> proposalEvaluation) {
-					
-					double minPrice = Double.MAX_VALUE;
-					int position = -1; 
-					for(int i = 0; i<proposalsContent.size(); i++){
-						double price = Double.parseDouble(proposalsContent.get(i).get("price"));
-						if(minPrice > price){
-							minPrice = price; 
-							position = i; 
-						}
-					}
-					List<Integer> retList = new ArrayList<Integer>(1); 
-					retList.add(position);
+					/*
+					List<Integer> retList = new ArrayList<Integer>(3);
+					retList.add(0);
+					retList.add(1);
+					retList.add(2);
 					return retList;
+					*/
+					return null; 
 			}
 		};
+		
+		evaluator.setParameters(3, 3, true, 3000);
 		ContractNetInitiatorConversationState conversationState = startConversation(message, evaluator);
 		new ContractNetResultsReceiver().execute(conversationState);
 
@@ -124,12 +122,37 @@ public class NegotiationClientAgent extends ContractNetInitiatorAgent implements
 	                e.printStackTrace();
 	            }
         	}
-        	Collection<Map<String, String>> values = conversationState.getAcceptedProposals().values();
-        	
-        	for(Map<String,String> value : values){
-        		return value.get("price"); 
+        	final Collection<Map<String, String>> values = conversationState.getAcceptedProposals().values();
+        	if(values.size() > 0){
+        		
+        		
+        		NegotiationClientAgent.this.addBehaviour(new SimpleBehaviour() {
+					private int receivedCnt = 0; 
+        			
+					@Override
+					public boolean done() {
+						return receivedCnt >= values.size()*3;
+					}
+					
+					@Override
+					public void action() {
+						MessageTemplate unknownTemplate = MessageTemplate.MatchPerformative(ACLMessage.UNKNOWN);
+						
+						ACLMessage message = receive(unknownTemplate);
+						if(message != null){
+							logger.log(Level.INFO, message.getContent());
+							receivedCnt++; 
+						}
+						else {
+							block();
+						}
+					}
+				});
+            	return "receiveing offerts from " + values.size() + " agents";
         	}
-        	return "no offerts";
+
+        	else
+        		return "not enough offerts";
         }
 
         @Override

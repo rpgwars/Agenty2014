@@ -183,33 +183,34 @@ public class ContractNetInitiatorAgent extends Agent implements ContractNetProto
 				else{
 					ContractNetInitiatorConversationStatus conversationStatus = conversationState.getStatus();
 					if(conversationStatus != ContractNetInitiatorConversationStatus.GETTING_PROPOSALS_STATUS && 
-							conversationStatus != ContractNetInitiatorConversationStatus.SENDING_CALLS_FOR_PROPOSAL_STATUS)
-					{
+							conversationStatus != ContractNetInitiatorConversationStatus.SENDING_CALLS_FOR_PROPOSAL_STATUS) {
 						logger.log(Level.INFO, "proposal from" + proposalMessage.getSender().toString() +  " received too late");
 						sendRejectMessage(proposalMessage.getSender(),conversationId);
 					}
-					else if(proposalMessage.getPerformative() == ACLMessage.REFUSE)
-						logger.log(Level.INFO, "cfp rejected");
 					else {
-						logger.log(Level.INFO, "cfp accepted by " + proposalMessage.getSender().toString());
-						Map<String,String> proposalContent;
-						try {
-							proposalContent = objectMapper.readValue(proposalMessage.getContent(), 
-							    new TypeReference<HashMap<String,String>>(){});
-						} catch (Exception e) {
-							logger.log(Level.INFO, "could not parse proposal from " + proposalMessage.getSender().toString());
-							sendRejectMessage(proposalMessage.getSender(),conversationId);
-							return; 
+						if(proposalMessage.getPerformative() == ACLMessage.REFUSE)
+							logger.log(Level.INFO, "cfp rejected");
+						else {
+							logger.log(Level.INFO, "cfp accepted by " + proposalMessage.getSender().toString());
+							Map<String,String> proposalContent;
+							try {
+								proposalContent = objectMapper.readValue(proposalMessage.getContent(), 
+								    new TypeReference<HashMap<String,String>>(){});
+							} catch (Exception e) {
+								logger.log(Level.INFO, "could not parse proposal from " + proposalMessage.getSender().toString());
+								sendRejectMessage(proposalMessage.getSender(),conversationId);
+								return; 
+							}
+							
+							boolean continueAcceptingProposals = conversationState.addProposal(proposalMessage.getSender(), proposalContent);
+							logger.log(Level.INFO, "proposal accepted, continue accepting proposals =  " + continueAcceptingProposals);
+							if(!continueAcceptingProposals){
+								boolean settingStatusSucceded = conversationState.setStatus(ContractNetInitiatorConversationStatus.ANSWERING_PROPOSALS_STATUS);
+								if(settingStatusSucceded)
+									CallForProposalReplyListener.this.getAgent().addBehaviour(new ProposalAnswerSender(getAgent(), conversationState));
+							}
+							
 						}
-						
-						boolean continueAcceptingProposals = conversationState.addProposal(proposalMessage.getSender(), proposalContent);
-						logger.log(Level.INFO, "proposal accepted, continue accepting proposals =  " + continueAcceptingProposals);
-						if(!continueAcceptingProposals){
-							boolean settingStatusSucceded = conversationState.setStatus(ContractNetInitiatorConversationStatus.ANSWERING_PROPOSALS_STATUS);
-							if(settingStatusSucceded)
-								CallForProposalReplyListener.this.getAgent().addBehaviour(new ProposalAnswerSender(getAgent(), conversationState));
-						}
-						
 					}
 				}
 	
@@ -244,11 +245,11 @@ public class ContractNetInitiatorAgent extends Agent implements ContractNetProto
 		@Override
 		public void action() {
 			
-			if(conversationState.getProposalsContentMap().size() == 0) {
+			if(conversationState.getProposalsContentMap().size() < conversationState.getProposalEvaluator().getParameters().getMinAccepted()) {
 				conversationIdStateMap.remove(conversationState.getConversationId());
 				conversationState.setAcceptedProposals(new HashMap<AID, Map<String,String>>());
 				conversationState.setStatus(ContractNetInitiatorConversationStatus.FINISHED_STATUS);
-				logger.log(Level.INFO, "no oferts available for conversation " + conversationState.getConversationId());
+				logger.log(Level.INFO, "not enough oferts available for conversation " + conversationState.getConversationId());
 				return; 
 			}
 			
@@ -256,10 +257,11 @@ public class ContractNetInitiatorAgent extends Agent implements ContractNetProto
 			Map<AID,Integer> proposalsValueMap = conversationState.getProposalsValueMap();
 			
 			List<Entry<AID,Integer>> sortedByValueProposalSendersList = new ArrayList<Entry<AID,Integer>>(proposalsValueMap.entrySet());
+			
 			Collections.sort(sortedByValueProposalSendersList, new Comparator<Entry<AID,Integer>>(){
 
 				public int compare(Entry<AID,Integer> entry1, Entry<AID,Integer> entry2) {
-					return entry1.getValue() - entry2.getValue(); 
+					return entry2.getValue() - entry1.getValue(); 
 				}
 				
 			});
@@ -292,6 +294,8 @@ public class ContractNetInitiatorAgent extends Agent implements ContractNetProto
 				}
 				else{
 					int maxAcceptedProposals = conversationState.getProposalEvaluator().getParameters().getMaxAccepted();
+					if(i > maxAcceptedProposals)
+						i = maxAcceptedProposals;
 					for(; i < (proposalsValueList.size()) && (proposalsValueList.get(i) > 0) && (i < maxAcceptedProposals); i++);
 					selectedProposals = new ArrayList<Integer>(i);
 					for(int j = 0; j < i; j++)
