@@ -2,9 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="vertical" android:layout_width="fill_parent"
 	android:layout_height="fill_parent" android:weightSum="1">
-	<TextView android:layout_width="fill_parent"
-		android:layout_height="wrap_content" android:textSize="20sp"
-		android:text="@string/label_nick" />
+
+	<TextView
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:text="@string/label_nick"
+	    android:textSize="10sp" />
+
 	<EditText android:layout_height="wrap_content"
 		android:layout_width="match_parent" android:id="@+id/edit_nickname">
 		<requestFocus></requestFocus>
@@ -14,7 +18,7 @@
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
 	    android:text="@string/maxOffertsLabel"
-	    android:textSize="20sp" />
+	    android:textSize="10sp" />
 
 	<EditText
 	    android:id="@+id/edit_param1"
@@ -28,7 +32,7 @@
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
 	    android:text="@string/minOffertsLabel"
-	    android:textSize="20sp" />
+	    android:textSize="10sp" />
 
 	<EditText
 	    android:id="@+id/edit_param2"
@@ -49,7 +53,7 @@
 	<TextView android:layout_height="wrap_content" android:id="@+id/priceTextView"
 		android:layout_width="wrap_content" android:text="info"></TextView>
 	<TextView android:layout_height="wrap_content" android:id="@+id/addressInfoTextView"
-		android:layout_width="wrap_content" android:text="Enter address (blank if 10.0.2.2)"></TextView>
+		android:layout_width="wrap_content" android:text="Enter address (blank if 192.168.1.100)"></TextView>
 	<EditText android:layout_height="wrap_content"
 		android:layout_width="match_parent" android:id="@+id/edit_address">
 		

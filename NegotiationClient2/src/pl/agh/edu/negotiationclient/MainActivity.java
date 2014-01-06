@@ -139,12 +139,23 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onDestroy() {
+		MainActivity.offertsArray = null;
+		MainActivity.destinationArray.clear();
+		platformInitializer.stop();
 		super.onDestroy();
+		//finish();
 
 		unregisterReceiver(myReceiver);
 
 		logger.log(Level.INFO, "Destroy activity!");
 	}
+	
+//	@Override
+//	public void onBackPressed() {
+//
+//	    super.onBackPressed();
+//	    finish();
+//	}
 
 	private OnClickListener requestSender = new OnClickListener() {
 
@@ -232,7 +243,7 @@ public class MainActivity extends Activity {
 				EditText address = (EditText) findViewById(R.id.edit_address);
 				String host = address.getText().toString();
 				if (host == null || host.equals(""))
-					host = "10.0.2.2";
+					host = "192.168.1.100";
 				String port = "1099";
 				infoTextView.setText(getString(R.string.msg_connecting_to)
 						+ " " + host + ":" + port + "...");

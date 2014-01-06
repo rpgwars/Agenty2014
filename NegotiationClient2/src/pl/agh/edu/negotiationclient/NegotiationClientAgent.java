@@ -113,7 +113,7 @@ public class NegotiationClientAgent extends ContractNetInitiatorAgent implements
 					.getAcceptedProposals().values();
 			if (values.size() > 0) {
 
-				String result = "receiveing offerts from " + values.size()
+				String result = "received offerts from " + values.size()
 						+ " agents@";
 				for (Map<String, String> value : values) {
 					for (String key : value.keySet()) {

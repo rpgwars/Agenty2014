@@ -12,7 +12,7 @@ import android.widget.ListView;
 
 public class OffertsActivity extends Activity {
 	private static StableArrayAdapter adapter;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -25,28 +25,30 @@ public class OffertsActivity extends Activity {
 		listview.setAdapter(adapter);
 
 	}
-	
-    @Override
-    protected void onDestroy() {
+
+	@Override
+	protected void onDestroy() {
 		MainActivity.listViewIsRunning = false;
-        super.onDestroy();
-    }
+		super.onDestroy();
+	}
 
 	public static List<String> generateOtputData() {
 		List<String> result = new ArrayList<String>();
 		int i = 0;
 		for (String key : MainActivity.destinationArray.keySet()) {
-			result.add(key + ": "+ MainActivity.destinationArray.get(key) + " "
-					+ MainActivity.offertsArray[i]);
+			result.add(key + ": " + MainActivity.destinationArray.get(key)
+					+ " " + MainActivity.offertsArray[i]);
 			i++;
 		}
 		return result;
 	}
-	
+
 	public static void notifyAboutChanges() {
 		List<String> newList = generateOtputData();
 		adapter.clear();
-		adapter.addAll(newList);
+		for (String s : newList) {
+			adapter.add(s);
+		}
 		adapter.notifyDataSetChanged();
 	}
 
@@ -61,7 +63,6 @@ public class OffertsActivity extends Activity {
 				mIdMap.put(objects.get(i), i);
 			}
 		}
-
 
 		@Override
 		public boolean hasStableIds() {
