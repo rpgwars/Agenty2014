@@ -9,6 +9,35 @@
 		android:layout_width="match_parent" android:id="@+id/edit_nickname">
 		<requestFocus></requestFocus>
 	</EditText>
+
+	<TextView
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:text="@string/maxOffertsLabel"
+	    android:textSize="20sp" />
+
+	<EditText
+	    android:id="@+id/edit_param1"
+	    android:layout_width="90dp"
+	    android:layout_height="wrap_content"
+	    android:layout_gravity="center_horizontal"
+	    android:inputType="number"
+	    android:ems="10" />
+
+	<TextView
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:text="@string/minOffertsLabel"
+	    android:textSize="20sp" />
+
+	<EditText
+	    android:id="@+id/edit_param2"
+	    android:layout_width="90dp"
+	    android:layout_height="wrap_content"
+	    android:layout_gravity="center_horizontal"
+	    android:inputType="number"
+	    android:ems="10" />
+
 	<Button android:layout_height="wrap_content"
 		android:layout_gravity="center_horizontal" android:text="@string/button_login"
 		android:layout_width="wrap_content" android:id="@+id/button_chat7"></Button>
@@ -25,4 +54,12 @@
 		android:layout_width="match_parent" android:id="@+id/edit_address">
 		
 	</EditText>
+
+	<Button
+	    android:id="@+id/lsitViewButton"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:text="@string/listViewButton"
+	    android:layout_gravity="center_horizontal" />
+
 </LinearLayout>

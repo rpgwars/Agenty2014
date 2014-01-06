@@ -23,7 +23,6 @@ Boston, MA  02111-1307, USA.
 
 package pl.agh.edu.negotiationclient;
 
-
 import jade.android.RuntimeCallback;
 import jade.core.MicroRuntime;
 import jade.util.Logger;
@@ -31,10 +30,12 @@ import jade.wrapper.AgentController;
 import jade.wrapper.ControllerException;
 import jade.wrapper.StaleProxyException;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
 import pl.agh.edu.mobileagentplatform.PlatformInitializer;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -57,11 +58,15 @@ import android.widget.TextView;
  * @author Michele Izzo - Telecomitalia
  */
 
-public class MainActivity extends Activity{
+public class MainActivity extends Activity {
 	private Logger logger = Logger.getJADELogger(this.getClass().getName());
 
 	static final int CHAT_REQUEST = 0;
 	static final int SETTINGS_REQUEST = 1;
+	private int firstParameter;
+	private int secondParameter;
+	public static String[] offertsArray;
+	public static Map<String, String> destinationArray = new HashMap<String, String>();
 
 	private MyReceiver myReceiver;
 	private MyHandler myHandler;
@@ -69,11 +74,12 @@ public class MainActivity extends Activity{
 	private TextView infoTextView;
 
 	private String nickname;
-	
-	private NegotiationClientInterface negotiationClientInterface; 
-	private NegotiationServerInterface negotiationServerInterface; 
-	private PlatformInitializer platformInitializer; 
-	
+	private Button listViewButton;
+	public static boolean listViewIsRunning = false;
+
+	private NegotiationClientInterface negotiationClientInterface;
+	private PlatformInitializer platformInitializer;
+
 	private class MyReceiver extends BroadcastReceiver {
 
 		@Override
@@ -84,9 +90,22 @@ public class MainActivity extends Activity{
 				finish();
 			}
 			if (action.equalsIgnoreCase("jade.demo.REFRESH")) {
-				
-				TextView priceTextView = (TextView)findViewById(R.id.priceTextView);
-				priceTextView.setText(intent.getExtras().get("price").toString());
+
+				TextView priceTextView = (TextView) findViewById(R.id.priceTextView);
+				String result = intent.getExtras().get("price").toString();
+				String[] firstSplit = result.split("@");
+				if (firstSplit.length > 1) {
+					String[] splitValues = firstSplit[1].split("#");
+					offertsArray = new String[splitValues.length];
+					for (int i = 0; i < splitValues.length; i++) {
+						offertsArray[i] = splitValues[i];
+					}
+					priceTextView.setText(firstSplit[0]);
+					listViewButton.performClick();
+				} else {
+					priceTextView.setText(result);
+				}
+
 			}
 		}
 	}
@@ -95,27 +114,27 @@ public class MainActivity extends Activity{
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		platformInitializer = PlatformInitializer.getInstance();
-		
+
 		myReceiver = new MyReceiver();
 
-				
 		IntentFilter priceFilter = new IntentFilter();
 		priceFilter.addAction("jade.demo.REFRESH");
 		registerReceiver(myReceiver, priceFilter);
-
 
 		myHandler = new MyHandler();
 		setContentView(R.layout.main);
 		Button button = (Button) findViewById(R.id.button_chat7);
 		button.setOnClickListener(buttonChatListener);
 
-		Button getBestPrice = (Button)findViewById(R.id.button_getBestPrice);
+		Button getBestPrice = (Button) findViewById(R.id.button_getBestPrice);
 		getBestPrice.setOnClickListener(requestSender);
 
 		infoTextView = (TextView) findViewById(R.id.infoTextView);
 		infoTextView.setText("");
-		
-		
+
+		listViewButton = (Button) findViewById(R.id.lsitViewButton);
+		listViewButton.setOnClickListener(listViewButtonListener);
+
 	}
 
 	@Override
@@ -126,47 +145,77 @@ public class MainActivity extends Activity{
 
 		logger.log(Level.INFO, "Destroy activity!");
 	}
-	
-	private OnClickListener requestSender = new OnClickListener(){
-		
-		public void onClick(View view){
-			
+
+	private OnClickListener requestSender = new OnClickListener() {
+
+		public void onClick(View view) {
+
 			try {
-				Map<String, String> agentClassNameNickNameMap = PlatformInitializer.getInstance().getAgentClassNameNickNameMap();
-				negotiationClientInterface = MicroRuntime.getAgent(agentClassNameNickNameMap.get(NegotiationClientAgent.class.getName())).getO2AInterface(NegotiationClientInterface.class);
-				negotiationServerInterface = MicroRuntime.getAgent(agentClassNameNickNameMap.get(NegotiationParticipantAgent.class.getName())).getO2AInterface(NegotiationServerInterface.class);
+				Map<String, String> agentClassNameNickNameMap = PlatformInitializer
+						.getInstance().getAgentClassNameNickNameMap();
+				negotiationClientInterface = MicroRuntime.getAgent(
+						agentClassNameNickNameMap
+								.get(NegotiationClientAgent.class.getName()))
+						.getO2AInterface(NegotiationClientInterface.class);
+				MicroRuntime.getAgent(
+						agentClassNameNickNameMap
+								.get(NegotiationParticipantAgent.class
+										.getName())).getO2AInterface(
+						NegotiationServerInterface.class);
+				negotiationClientInterface.loadParameter(firstParameter, secondParameter);
 				negotiationClientInterface.getBestPrice();
 			} catch (StaleProxyException e) {
-				logger.log(Level.SEVERE, "could not get best price: stale proxy exception");
+				logger.log(Level.SEVERE,
+						"could not get best price: stale proxy exception");
 			} catch (ControllerException e) {
-				logger.log(Level.SEVERE, "could not get best price: controller exception");
+				logger.log(Level.SEVERE,
+						"could not get best price: controller exception");
 			}
-			
+
 		}
-		
+
 	};
-	
-	private RuntimeCallback<Void> platformInitCallback = new RuntimeCallback<Void>(){
+
+	private OnClickListener listViewButtonListener = new OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			if (offertsArray == null) {
+				ShowDialog("Nie otrzymano ofert");
+			} else {
+				Intent intent = new Intent(MainActivity.this,
+						OffertsActivity.class);
+				startActivity(intent);
+			}
+		}
+	};
+
+	private RuntimeCallback<Void> platformInitCallback = new RuntimeCallback<Void>() {
 
 		@Override
 		public void onFailure(Throwable arg) {
-			
+
 		}
 
 		@Override
 		public void onSuccess(Void arg) {
-			platformInitializer.startAgent(NegotiationClientAgent.class.getName(),
-					agentStartupCallback, new Object[] { getApplicationContext()});
-			platformInitializer.startAgent(NegotiationParticipantAgent.class.getName(), agentStartupCallback, 
-					new Object[]{getApplicationContext(),"100","50","20","30"});
+			platformInitializer.startAgent(
+					NegotiationClientAgent.class.getName(),
+					agentStartupCallback,
+					new Object[] { getApplicationContext() });
+			platformInitializer.startAgent(
+					NegotiationParticipantAgent.class.getName(),
+					agentStartupCallback, new Object[] {
+							getApplicationContext(), "100", "50", "20", "30" });
 		}
-		
+
 	};
-	
+
 	private RuntimeCallback<AgentController> agentStartupCallback = new RuntimeCallback<AgentController>() {
 		@Override
 		public void onSuccess(AgentController agent) {
-			logger.log(Level.INFO, "Agent " + agent.getClass().getName() + "  successfully started!");
+			logger.log(Level.INFO, "Agent " + agent.getClass().getName()
+					+ "  successfully started!");
 		}
 
 		@Override
@@ -176,28 +225,42 @@ public class MainActivity extends Activity{
 		}
 	};
 
-
 	private OnClickListener buttonChatListener = new OnClickListener() {
 		public void onClick(View v) {
-				
-				try {
-					EditText address = (EditText)findViewById(R.id.edit_address);
-					String host = address.getText().toString();
-					if(host == null || host.equals(""))
-						host = "10.0.2.2";
-					String port = "1099";
-					infoTextView.setText(getString(R.string.msg_connecting_to)
-							+ " " + host + ":" + port + "...");
-					
-					nickname = ((EditText)findViewById(R.id.edit_nickname)).getText().toString();
-					platformInitializer.init(nickname, host, port, MainActivity.this, platformInitCallback);
 
-					
-				} catch (Exception ex) {
-					logger.log(Level.SEVERE, "Unexpected exception creating chat agent!");
-					infoTextView.setText(getString(R.string.msg_unexpected));
+			try {
+				EditText address = (EditText) findViewById(R.id.edit_address);
+				String host = address.getText().toString();
+				if (host == null || host.equals(""))
+					host = "10.0.2.2";
+				String port = "1099";
+				infoTextView.setText(getString(R.string.msg_connecting_to)
+						+ " " + host + ":" + port + "...");
+
+				nickname = ((EditText) findViewById(R.id.edit_nickname))
+						.getText().toString();
+
+				String tmpParam1 = ((EditText) findViewById(R.id.edit_param1))
+						.getText().toString();
+				String tmpParam2 = ((EditText) findViewById(R.id.edit_param2))
+						.getText().toString();
+				if (!tmpParam1.matches("") && !tmpParam2.matches("")) {
+					firstParameter = Integer.parseInt(tmpParam1);
+					secondParameter = Integer.parseInt(tmpParam2);
+				} else {
+					firstParameter = 3;
+					secondParameter = 3;
 				}
-			
+
+				platformInitializer.init(nickname, host, port,
+						MainActivity.this, platformInitCallback);
+
+			} catch (Exception ex) {
+				logger.log(Level.SEVERE,
+						"Unexpected exception creating chat agent!");
+				infoTextView.setText(getString(R.string.msg_unexpected));
+			}
+
 		}
 	};
 
@@ -208,11 +271,11 @@ public class MainActivity extends Activity{
 				// The chat activity was closed.
 				infoTextView.setText("");
 				platformInitializer.stop();
-				
+
 			}
 		}
 	}
-	
+
 	public void ShowDialog(String message) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 		builder.setMessage(message).setCancelable(false)
@@ -225,7 +288,7 @@ public class MainActivity extends Activity{
 		alert.show();
 	}
 
-
+	@SuppressLint("HandlerLeak")
 	private class MyHandler extends Handler {
 		@Override
 		public void handleMessage(Message msg) {
@@ -246,4 +309,3 @@ public class MainActivity extends Activity{
 		}
 	}
 }
-
