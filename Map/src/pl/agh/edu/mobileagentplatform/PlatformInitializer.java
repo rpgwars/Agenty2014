@@ -25,7 +25,6 @@ import android.os.IBinder;
 
 
 
-//wnioski : trzeba zastosowac amssubscriber do wszystkich , teraz jest stosowany tylko do serwerow!
 public class PlatformInitializer {
 	
 	private Logger logger = Logger.getJADELogger(this.getClass().getName());

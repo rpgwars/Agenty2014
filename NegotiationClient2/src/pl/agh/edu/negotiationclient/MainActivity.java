@@ -217,7 +217,7 @@ public class MainActivity extends Activity {
 			platformInitializer.startAgent(
 					NegotiationParticipantAgent.class.getName(),
 					agentStartupCallback, new Object[] {
-							getApplicationContext(), "100", "50", "20", "30" });
+							getApplicationContext(), "9", "9", "5", "30" });
 		}
 
 	};
@@ -243,7 +243,8 @@ public class MainActivity extends Activity {
 				EditText address = (EditText) findViewById(R.id.edit_address);
 				String host = address.getText().toString();
 				if (host == null || host.equals(""))
-					host = "192.168.1.100";
+					//host = "192.168.1.100";
+					host = "10.0.2.2";
 				String port = "1099";
 				infoTextView.setText(getString(R.string.msg_connecting_to)
 						+ " " + host + ":" + port + "...");

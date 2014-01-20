@@ -65,7 +65,32 @@ public class NegotiationParticipantAgent extends ContractNetParticipantAgent imp
 
 	
 	@Override
-	protected Map<String, String> createConversationResult(AID sender, Map<String,String> proposal) {
+	protected Map<String, String> createConversationResult(final AID sender, Map<String,String> proposal) {
+		
+		Runnable senderTask = new Runnable(){
+
+			@Override
+			public void run() {
+				Random random = new Random(); 
+				for(int i = 0; i<3; i++){
+					
+					ACLMessage message = new ACLMessage(ACLMessage.UNKNOWN);
+					message.setContent("Polozenie " + getName() + " dlugosc: " + 99  + " " + " szerokosc " + 99);
+					message.addReceiver(sender);
+					send(message);
+					try {
+						Thread.sleep(10000);
+					} catch (InterruptedException e) {
+						
+					}
+				}
+				
+			}
+			
+		};
+		Thread senderThread = new Thread(senderTask);
+		senderThread.start();
+		
 		return new HashMap<String,String>();
 	}
 

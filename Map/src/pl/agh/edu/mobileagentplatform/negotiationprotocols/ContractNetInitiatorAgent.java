@@ -22,10 +22,6 @@ import java.util.logging.Level;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
-import pl.agh.edu.mobileagentplatform.PlatformInitializer;
-
-
-
 
 public class ContractNetInitiatorAgent extends Agent implements ContractNetProtocol{
 	
@@ -41,12 +37,15 @@ public class ContractNetInitiatorAgent extends Agent implements ContractNetProto
 	
 	private Timer timer;
 	
+	private int conversationNr; 
+	
 	protected void setup() {
 		super.setup();
 		Object[] args = getArguments();
 		timer = new Timer(); 
 		objectMapper = new ObjectMapper();
-		conversationIdStateMap = new HashMap<String,ContractNetInitiatorConversationState>(); 
+		conversationIdStateMap = new HashMap<String,ContractNetInitiatorConversationState>();
+		this.conversationNr = 0;
 		addBehaviour(new CallForProposalReplyListener(this));
 		addBehaviour(new InformListener(this));
 		addBehaviour(new ManagerResponseListener(this));
@@ -56,9 +55,8 @@ public class ContractNetInitiatorAgent extends Agent implements ContractNetProto
 	
 	public ContractNetInitiatorConversationState startConversation(Map<String,String> message, ContractNetProposalEvaluator proposalEvaluator) {
 		
-		String conversationId = PlatformInitializer.getInstance().getAnotherConversationId();
-		
-
+		String conversationId = getName() + "#" + this.conversationNr;
+		this.conversationNr++;
 		
 		ContractNetInitiatorConversationState conversationState;
 		try {
