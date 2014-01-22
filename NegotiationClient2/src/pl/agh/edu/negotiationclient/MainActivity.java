@@ -43,9 +43,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -67,9 +70,13 @@ public class MainActivity extends Activity {
 	private int secondParameter;
 	public static String[] offertsArray;
 	public static Map<String, String> destinationArray = new HashMap<String, String>();
+	public static int MODE;
 
 	private MyReceiver myReceiver;
 	private MyHandler myHandler;
+
+	private LocationManager mLocationManager = null;
+	public Location agentLocation = null;
 
 	private TextView infoTextView;
 
@@ -135,6 +142,18 @@ public class MainActivity extends Activity {
 		listViewButton = (Button) findViewById(R.id.lsitViewButton);
 		listViewButton.setOnClickListener(listViewButtonListener);
 
+		initializeLocationManager();
+		agentLocation = mLocationManager
+				.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		if (agentLocation == null) {
+			agentLocation = mLocationManager
+					.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		}
+
+		if (agentLocation != null) {
+			logger.log(Level.INFO, "lat=" + agentLocation.getLatitude()
+					+ " lon=" + agentLocation.getLongitude());
+		}
 	}
 
 	@Override
@@ -143,19 +162,12 @@ public class MainActivity extends Activity {
 		MainActivity.destinationArray.clear();
 		platformInitializer.stop();
 		super.onDestroy();
-		//finish();
+		// finish();
 
 		unregisterReceiver(myReceiver);
 
 		logger.log(Level.INFO, "Destroy activity!");
 	}
-	
-//	@Override
-//	public void onBackPressed() {
-//
-//	    super.onBackPressed();
-//	    finish();
-//	}
 
 	private OnClickListener requestSender = new OnClickListener() {
 
@@ -164,17 +176,29 @@ public class MainActivity extends Activity {
 			try {
 				Map<String, String> agentClassNameNickNameMap = PlatformInitializer
 						.getInstance().getAgentClassNameNickNameMap();
-				negotiationClientInterface = MicroRuntime.getAgent(
-						agentClassNameNickNameMap
-								.get(NegotiationClientAgent.class.getName()))
-						.getO2AInterface(NegotiationClientInterface.class);
-				MicroRuntime.getAgent(
-						agentClassNameNickNameMap
-								.get(NegotiationParticipantAgent.class
-										.getName())).getO2AInterface(
-						NegotiationServerInterface.class);
-				negotiationClientInterface.loadParameter(firstParameter, secondParameter);
-				negotiationClientInterface.getBestPrice();
+				if (MODE == 1 || MODE == 2) {
+
+					negotiationClientInterface = MicroRuntime
+							.getAgent(
+									agentClassNameNickNameMap
+											.get(NegotiationClientAgent.class
+													.getName()))
+							.getO2AInterface(NegotiationClientInterface.class);
+				}
+				if (MODE == 1 || MODE == 3) {
+					MicroRuntime.getAgent(
+							agentClassNameNickNameMap
+									.get(NegotiationParticipantAgent.class
+											.getName())).getO2AInterface(
+							NegotiationServerInterface.class);
+				}
+				if (MODE == 1 || MODE == 2) {
+					negotiationClientInterface.loadParameter(firstParameter,
+							secondParameter,
+							String.valueOf(agentLocation.getLatitude()),
+							String.valueOf(agentLocation.getLongitude()));
+					negotiationClientInterface.getBestPrice();
+				}
 			} catch (StaleProxyException e) {
 				logger.log(Level.SEVERE,
 						"could not get best price: stale proxy exception");
@@ -210,14 +234,21 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void onSuccess(Void arg) {
-			platformInitializer.startAgent(
-					NegotiationClientAgent.class.getName(),
-					agentStartupCallback,
-					new Object[] { getApplicationContext() });
-			platformInitializer.startAgent(
-					NegotiationParticipantAgent.class.getName(),
-					agentStartupCallback, new Object[] {
-							getApplicationContext(), "9", "9", "5", "30" });
+			if (MODE == 1 || MODE == 2) {
+				platformInitializer.startAgent(
+						NegotiationClientAgent.class.getName(),
+						agentStartupCallback,
+						new Object[] { getApplicationContext() });
+			}
+			if (MODE == 1 || MODE == 3) {
+				platformInitializer.startAgent(
+						NegotiationParticipantAgent.class.getName(),
+						agentStartupCallback,
+						new Object[] { getApplicationContext(),
+								String.valueOf(agentLocation.getLatitude()),
+								String.valueOf(agentLocation.getLongitude()),
+								"5", "2" });
+			}
 		}
 
 	};
@@ -240,11 +271,19 @@ public class MainActivity extends Activity {
 		public void onClick(View v) {
 
 			try {
+				EditText modeTextfield = (EditText) findViewById(R.id.edit_mode);
+				String mode = modeTextfield.getText().toString();
+				if (!mode.matches("")) {
+					MODE = Integer.parseInt(mode);
+				} else {
+					MODE = 1;
+				}
+
 				EditText address = (EditText) findViewById(R.id.edit_address);
 				String host = address.getText().toString();
 				if (host == null || host.equals(""))
-					//host = "192.168.1.100";
-					host = "10.0.2.2";
+					host = "192.168.1.100";
+				// host = "10.0.2.2";
 				String port = "1099";
 				infoTextView.setText(getString(R.string.msg_connecting_to)
 						+ " " + host + ":" + port + "...");
@@ -260,8 +299,14 @@ public class MainActivity extends Activity {
 					firstParameter = Integer.parseInt(tmpParam1);
 					secondParameter = Integer.parseInt(tmpParam2);
 				} else {
-					firstParameter = 3;
-					secondParameter = 3;
+					if (MODE == 1) {
+						firstParameter = 1;
+						secondParameter = 1;
+					} else {
+						firstParameter = 3;
+						secondParameter = 3;
+					}
+
 				}
 
 				platformInitializer.init(nickname, host, port,
@@ -320,4 +365,13 @@ public class MainActivity extends Activity {
 			sendMessage(msg);
 		}
 	}
+
+	private void initializeLocationManager() {
+		Log.d("service_loc", "initializeLocationManager");
+		if (mLocationManager == null) {
+			mLocationManager = (LocationManager) getApplicationContext()
+					.getSystemService(Context.LOCATION_SERVICE);
+		}
+	}
+
 }

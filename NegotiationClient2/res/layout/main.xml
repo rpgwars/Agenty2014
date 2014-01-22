@@ -9,10 +9,25 @@
 	    android:text="@string/label_nick"
 	    android:textSize="10sp" />
 
-	<EditText android:layout_height="wrap_content"
-		android:layout_width="match_parent" android:id="@+id/edit_nickname">
+	<EditText
+	    android:id="@+id/edit_nickname"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content" >
+
 		<requestFocus></requestFocus>
 	</EditText>
+
+	<TextView
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:text="@string/mode" 	    
+	    android:textSize="10sp" />
+
+	<EditText
+	    android:id="@+id/edit_mode"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:inputType="number" />
 
 	<TextView
 	    android:layout_width="fill_parent"
@@ -25,8 +40,8 @@
 	    android:layout_width="90dp"
 	    android:layout_height="wrap_content"
 	    android:layout_gravity="center_horizontal"
-	    android:inputType="number"
-	    android:ems="10" />
+	    android:ems="10"
+	    android:inputType="number" />
 
 	<TextView
 	    android:layout_width="fill_parent"
@@ -39,15 +54,27 @@
 	    android:layout_width="90dp"
 	    android:layout_height="wrap_content"
 	    android:layout_gravity="center_horizontal"
-	    android:inputType="number"
-	    android:ems="10" />
+	    android:ems="10"
+	    android:inputType="number" />
 
-	<Button android:layout_height="wrap_content"
-		android:layout_gravity="center_horizontal" android:text="@string/button_login"
-		android:layout_width="wrap_content" android:id="@+id/button_chat7"></Button>
-	<Button android:layout_height="wrap_content"
-		android:layout_gravity="center_horizontal" android:text="@string/button_getPrice"
-		android:layout_width="wrap_content" android:id="@+id/button_getBestPrice"></Button>
+	<Button
+	    android:id="@+id/button_chat7"
+	    android:layout_width="wrap_content"
+	    android:layout_height="25dp"
+	    android:layout_gravity="center_horizontal"
+	    android:text="@string/button_login"
+	    android:textSize="10sp" >
+</Button>
+
+	<Button
+	    android:id="@+id/button_getBestPrice"
+	    android:layout_width="wrap_content"
+	    android:layout_height="25dp"
+	    android:layout_gravity="center_horizontal"
+	    android:text="@string/button_getPrice"
+	    android:textSize="10sp" >
+</Button>
+
 	<TextView android:layout_height="wrap_content" android:id="@+id/infoTextView"
 		android:layout_width="wrap_content" android:text="info"></TextView>
 	<TextView android:layout_height="wrap_content" android:id="@+id/priceTextView"
@@ -62,8 +89,9 @@
 	<Button
 	    android:id="@+id/lsitViewButton"
 	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:text="@string/listViewButton"
-	    android:layout_gravity="center_horizontal" />
+	    android:layout_height="25dp"
+	    android:layout_gravity="center_horizontal"
+	    android:text="@string/listViewButton" 
+	   	android:textSize="10sp" />
 
 </LinearLayout>

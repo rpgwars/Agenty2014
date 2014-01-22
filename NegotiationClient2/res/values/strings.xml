@@ -34,4 +34,5 @@
     <string name="listViewButton">Show offerts</string>
     <string name="maxOffertsLabel">Max number of offerts</string>
     <string name="minOffertsLabel">Min number of offerts</string>
+    <string name="mode">MODE {1,2,3}</string>
 </resources>

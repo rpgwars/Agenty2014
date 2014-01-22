@@ -28,6 +28,8 @@ public class NegotiationClientAgent extends ContractNetInitiatorAgent implements
 	private static final long serialVersionUID = 1L;
 	private int firstParameter;
 	private int secondParameter;
+	private String longtitude;
+	private String latitude;
 
 	private Logger logger = Logger.getJADELogger(this.getClass().getName());
 
@@ -47,9 +49,11 @@ public class NegotiationClientAgent extends ContractNetInitiatorAgent implements
 		registerO2AInterface(NegotiationClientInterface.class, this);
 	}
 
-	public void loadParameter(int first, int second) {
+	public void loadParameter(int first, int second, String p_longtitude, String p_latitude) {
 		this.firstParameter = first;
 		this.secondParameter = second;
+		this.longtitude = p_longtitude;
+		this.latitude = p_latitude;
 	}
 
 	private void showBestPrice(String price) {
@@ -62,8 +66,8 @@ public class NegotiationClientAgent extends ContractNetInitiatorAgent implements
 	public void getBestPrice() {
 
 		Map<String, String> message = new HashMap<String, String>();
-		message.put("longtitude", "7");
-		message.put("latitude", "8");
+		message.put("longtitude", longtitude);
+		message.put("latitude", latitude);
 		ContractNetProposalEvaluator evaluator = new ContractNetProposalEvaluator() {
 
 			@Override

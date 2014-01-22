@@ -58,8 +58,8 @@ public class NegotiationParticipantAgent extends ContractNetParticipantAgent imp
 		minPrice = Double.parseDouble(args[3].toString());
 		maxDistance = Double.parseDouble(args[4].toString());
 		
-		logger.log(Level.INFO, "agent setup, subscription sent, location: " + args[0].toString() + " " + args[1].toString() + " minPrice: " 
-				+ args[2].toString() + " maxDistance: " + args[3].toString());
+		logger.log(Level.INFO, "agent setup, subscription sent, location: " + args[1].toString() + " " + args[2].toString() + " minPrice: " 
+				+ args[3].toString() + " maxDistance: " + args[4].toString());
 	}
 	
 
