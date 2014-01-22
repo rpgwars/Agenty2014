@@ -65,7 +65,7 @@ public class NegotiationServer extends ContractNetParticipantAgent{
 				for(int i = 0; i<3; i++){
 					
 					ACLMessage message = new ACLMessage(ACLMessage.UNKNOWN);
-					message.setContent("Polozenie " + getName() + " dlugosc: " + Math.abs(random.nextInt()) % 10 + " " + " szerokosc " + Math.abs(random.nextInt()) % 10);
+					message.setContent("Polozenie " + getName() + " dlugosc: " + longtitude + " " + " szerokosc " + latitude);
 					message.addReceiver(sender);
 					send(message);
 					try {

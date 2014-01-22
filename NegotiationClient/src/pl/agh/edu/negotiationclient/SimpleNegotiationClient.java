@@ -24,6 +24,8 @@ public class SimpleNegotiationClient extends ContractNetInitiatorAgent{
 	private Logger logger = jade.util.Logger.getMyLogger(this.getClass().getName());
 	private int maxAccepted; 
 	private int minAccepted; 
+	private String longtitude;
+	private String latitude;
 	
 	@Override
 	protected void setup() {
@@ -38,8 +40,10 @@ public class SimpleNegotiationClient extends ContractNetInitiatorAgent{
 		Object[] args = getArguments(); 
 		maxAccepted = Integer.parseInt((String)args[0]);
 		minAccepted = Integer.parseInt((String)args[1]);
+		longtitude = (String)args[2];
+		latitude = (String)args[3];
 		
-		logger.log(Level.INFO, "initiator agent started");
+		logger.log(Level.INFO, "initiator agent started lon:" + longtitude + " lat:" + latitude);
 		Thread t = new Thread(){
 			public void run(){
 				getBestPrice();
@@ -58,8 +62,8 @@ public class SimpleNegotiationClient extends ContractNetInitiatorAgent{
 			e.printStackTrace();
 		}
 		Map<String, String> message = new HashMap<String, String>();
-		message.put("longtitude", "7");
-		message.put("latitude", "8");
+		message.put("longtitude", longtitude);
+		message.put("latitude", latitude);
 		ContractNetProposalEvaluator evaluator = new ContractNetProposalEvaluator() {
 
 			@Override
